@@ -1,0 +1,60 @@
+plugins {
+    id 'java-library'
+}
+
+group = project.group
+version = project.version
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {    
+    testImplementation 'org.junit.jupiter:junit-jupiter:6.0.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'com.google.jimfs:jimfs:1.3.1' // virtual fs for planned Steam discovery testing
+
+    implementation 'net.java.dev.jna:jna-platform:5.18.1'
+    implementation 'jakarta.json:jakarta.json-api:2.1.3'
+    implementation 'jakarta.json.bind:jakarta.json.bind-api:3.0.1'
+    runtimeOnly 'org.eclipse.parsson:parsson:1.1.7'
+    runtimeOnly 'org.eclipse:yasson:3.0.4'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+jar {
+    manifest {
+        attributes(
+                'Implementation-Title': project.name,
+                'Implementation-Version': version,
+                'Enable-Native-Access': 'ALL-UNNAMED'
+        )
+    }
+}
+
+tasks.withType(Javadoc) {
+    failOnError = false 
+    //options.addBooleanOption('-Xdoclint:-missing', true)
+    //options.quiet()
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+test {
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+task copyDependencies(type: Copy) {
+    // used to manually pull dependencies together so we can execute
+    from configurations.runtimeClasspath
+    into "$buildDir/libs"
+}

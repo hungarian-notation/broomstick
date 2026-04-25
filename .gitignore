@@ -1,6 +1,8 @@
 **/build/
 **/bin/
 
+*.log
+
 .gradle
 .gradletasknamecache
 !gradle-wrapper.jar
