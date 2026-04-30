@@ -78,4 +78,9 @@ public class SteamAppImpl implements SteamApp {
         return WorkshopImpl.read(this, getWorkshopManifestPath());
     }
 
+    @Override
+    public String toString() {
+        return "SteamAppImpl [appId=" + appId + ", name=" + name + ", buildId=" + buildId + ", installDir=" + installDir
+                + "]";
+    }
 }

@@ -17,6 +17,26 @@ repositories {
 group = project.group
 version = project.version
 
+sourceSets {    
+    jna {        
+        java {
+            srcDirs = ['src/jna/java']
+        }
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    registerFeature('jna') {
+        usingSourceSet(sourceSets.jna)
+    }
+}
+
+
 dependencies {    
     testImplementation 'org.junit.jupiter:junit-jupiter:6.0.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -26,13 +46,10 @@ dependencies {
 
     compileOnly 'io.soabase.record-builder:record-builder-core:52'
     annotationProcessor 'io.soabase.record-builder:record-builder-processor:52'
-    implementation 'net.java.dev.jna:jna-platform:5.18.1'
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
-    }
+    
+    jnaCompileOnly 'io.soabase.record-builder:record-builder-core:52'
+    jnaAnnotationProcessor 'io.soabase.record-builder:record-builder-processor:52'
+    jnaImplementation 'net.java.dev.jna:jna-platform:5.18.1'
 }
 
 jar {
@@ -45,10 +62,14 @@ jar {
     }
 }
 
+tasks.register('jnaShadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+    archiveClassifier = 'jna-all'
+    from sourceSets.jna.output
+    configurations = [project.configurations.jnaRuntimeClasspath]
+}
+
 tasks.withType(Javadoc) {
     failOnError = false 
-    //options.addBooleanOption('-Xdoclint:-missing', true)
-    //options.quiet()
 }
 
 def networkTests = false;
@@ -89,6 +110,17 @@ tasks.register("jshell") {
     def shadowJarPath = shadowJar.archiveFile.get()
         
     doLast {
-        new ProcessBuilder('cmd', '/c', 'start', 'cmd.exe', '/c', "jshell.exe --class-path=${shadowJarPath}").start()
+        new ProcessBuilder('cmd', '/c', 'start', 'cmd.exe', '/c', "jshell.exe --class-path=${shadowJarPath} --enable-native-access=ALL-UNNAMED ").start()
+    }
+}
+
+tasks.register("jnaJshell") {
+    dependsOn tasks.named("shadowJar").map { dep -> dep.archiveFile }
+    dependsOn tasks.named("jnaShadowJar").map { dep -> dep.archiveFile }
+    def shadowJarPath = shadowJar.archiveFile.get()
+    def jnaShadowJar = jnaShadowJar.archiveFile.get()
+        
+    doLast {
+        new ProcessBuilder('cmd', '/c', 'start', 'cmd.exe', '/c', "jshell.exe --class-path=${shadowJarPath};${jnaShadowJar} --enable-native-access=ALL-UNNAMED ").start()
     }
 }

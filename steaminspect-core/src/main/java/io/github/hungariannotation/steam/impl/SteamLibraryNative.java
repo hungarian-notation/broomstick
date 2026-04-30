@@ -1,9 +1,8 @@
 package io.github.hungariannotation.steam.impl;
 
-import com.sun.jna.Platform;
-
 import io.github.hungariannotation.steam.Steam;
-import io.github.hungariannotation.steam.impl.win32.Win32Steam;
+import io.github.hungariannotation.steam.win32.Registry;
+import io.github.hungariannotation.steam.win32.Win32Steam;
 
 public class SteamLibraryNative {
     private SteamLibraryNative() {
@@ -12,13 +11,13 @@ public class SteamLibraryNative {
     private static Steam instance;
 
     /**
-     * Gets an appropriate plaform-specific implemenation of SteamInstallation.
+     * Gets an appropriate platform-specific implementation of SteamInstallation.
      * 
      * @return
      */
     public static Steam getInstance() {
         if (instance == null) {
-            if (Platform.isWindows()) {
+            if (Registry.isAvailable()) {
                 instance = new Win32Steam();
             } else {
                 instance = new FallbackSteam();
